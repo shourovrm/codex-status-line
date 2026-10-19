@@ -1,6 +1,5 @@
 """OpenRouter API calls, each cached on disk so a bar refreshing every few seconds stays cheap."""
 
-import hashlib
 import json
 import os
 import time
@@ -11,7 +10,6 @@ from pathlib import Path
 
 API_ROOT = "https://openrouter.ai/api/v1"
 REQUEST_TIMEOUT_SECONDS = 3
-KEY_INFO_MAX_AGE_SECONDS = 60
 MODEL_PRICES_MAX_AGE_SECONDS = 24 * 60 * 60
 HTTP_NOT_FOUND = 404
 
@@ -65,12 +63,6 @@ def cached(cache_name, max_age_seconds, fetch):
     data = fetch()
     save_json_file(cache_path, {"fetched_at": time.time(), "data": data})
     return data
-
-
-def key_info(api_key):
-    """Spending and limit of one key. The cache file is named by a hash, never the key itself."""
-    key_hash = hashlib.sha256(api_key.encode()).hexdigest()[:16]
-    return cached(f"key_{key_hash}.json", KEY_INFO_MAX_AGE_SECONDS, lambda: get("/key", api_key))
 
 
 def model_price(model):

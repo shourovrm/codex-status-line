@@ -14,32 +14,27 @@ from helpers import plan_rate_limits, session_meta, token_count, turn_context, w
 
 
 class IdentityPartsTest(unittest.TestCase):
-    def test_shows_model_home_relative_folder_and_branch(self):
-        parts = status.identity_parts("openai/gpt-6-luna", "/home/u/project", "/home/u", "main")
-        self.assertEqual(render_plain(parts), "gpt-6-luna · ~/project · main")
+    def test_shows_home_relative_folder_and_branch(self):
+        parts = status.identity_parts("/home/u/project", "/home/u", "main")
+        self.assertEqual(render_plain(parts), "~/project · main")
 
-    def test_leaves_out_branch_and_falls_back_to_codex_without_a_model(self):
-        parts = status.identity_parts(None, "/srv", "/home/u", None)
-        self.assertEqual(render_plain(parts), "codex · /srv")
+    def test_leaves_out_branch_outside_a_repository(self):
+        parts = status.identity_parts("/srv", "/home/u", None)
+        self.assertEqual(render_plain(parts), "/srv")
 
 
 class OpenRouterPartsTest(unittest.TestCase):
-    def test_shows_session_today_and_month_against_the_limit(self):
-        key_info = {"usage_daily": 0.0312, "usage_monthly": 3.39, "limit": 20}
-        parts = status.openrouter_parts(0.0013, 0.0, True, key_info)
-        self.assertEqual(
-            render_plain(parts), "session $0.0013 · today $0.0312 · █░░░░ month $3.39/$20.00"
-        )
+    def test_shows_only_the_billed_session_cost(self):
+        parts = status.openrouter_parts(0.0013, 0.0, True)
+        self.assertEqual(render_plain(parts), "session $0.0013")
 
     def test_marks_an_estimated_total_with_a_tilde(self):
-        key_info = {"usage_daily": 0.5, "usage_monthly": 12.0, "limit": None}
-        parts = status.openrouter_parts(0.25, 0.01, True, key_info)
-        self.assertEqual(render_plain(parts), "session ~$0.2600 · today $0.5000 · month $12.00")
+        parts = status.openrouter_parts(0.25, 0.01, True)
+        self.assertEqual(render_plain(parts), "session ~$0.2600")
 
     def test_marks_requests_without_any_figure_with_a_plus(self):
-        key_info = {"usage_daily": 0.5, "usage_monthly": 12.0, "limit": None}
-        parts = status.openrouter_parts(0.25, 0.0, False, key_info)
-        self.assertEqual(render_plain(parts), "session $0.2500+ · today $0.5000 · month $12.00")
+        parts = status.openrouter_parts(0.25, 0.0, False)
+        self.assertEqual(render_plain(parts), "session $0.2500+")
 
 
 class PlanPartsTest(unittest.TestCase):
@@ -74,7 +69,7 @@ class HookTest(unittest.TestCase):
             with mock.patch.dict(os.environ, {"CODEX_HOME": directory}):
                 output = json.loads(cli.run_hook(hook_input))
             message = output["systemMessage"]
-            self.assertTrue(message.startswith("gpt-6-luna · "), message)
+            self.assertNotIn("gpt-6-luna", message)
             self.assertIn("░░░░░ ctx 5%", message)
             self.assertIn("5h ██░░░ 40%", message)
             self.assertIn("week █░░░░ 21%", message)

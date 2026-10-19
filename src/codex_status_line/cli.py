@@ -59,9 +59,7 @@ def openrouter_billing_parts(summary, provider_config):
     estimated_cost, all_estimated = costs.estimate_pending_cost(
         pending_ids, summary.request_usage, price
     )
-    return status.openrouter_parts(
-        billed_cost, estimated_cost, all_estimated, openrouter.key_info(api_key)
-    )
+    return status.openrouter_parts(billed_cost, estimated_cost, all_estimated)
 
 
 def api_key_billing_parts(summary):
@@ -87,10 +85,9 @@ def billing_parts(summary):
     return [status.tokens_part(summary)]
 
 
-def status_parts(session_path, cwd, fallback_model):
+def status_parts(session_path, cwd):
     summary = summarize_session(session_path) if session_path else SessionSummary()
-    model = summary.model or fallback_model
-    parts = status.identity_parts(model, cwd, str(Path.home()), git_branch(cwd))
+    parts = status.identity_parts(cwd, str(Path.home()), git_branch(cwd))
     context = status.context_part(summary)
     if context:
         parts.append(context)
@@ -107,7 +104,7 @@ def run_tmux(pane_pid, cwd):
     started_at = process_start_time(codex_pid) - PROCESS_START_SLACK_SECONDS
     sessions_dir = providers.codex_home() / "sessions"
     session_path = find_session_for_process(sessions_dir, cwd, started_at)
-    return render_tmux(status_parts(session_path, cwd, None))
+    return render_tmux(status_parts(session_path, cwd))
 
 
 def run_hook(hook_input):
@@ -117,14 +114,14 @@ def run_hook(hook_input):
     else:
         sessions_dir = providers.codex_home() / "sessions"
         session_path = find_session_by_id(sessions_dir, hook_input["session_id"])
-    parts = status_parts(session_path, hook_input["cwd"], hook_input.get("model"))
+    parts = status_parts(session_path, hook_input["cwd"])
     return json.dumps({"systemMessage": render_plain(parts)})
 
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(
         prog="codex-status-line",
-        description="Show model, context and cost of a Codex CLI session.",
+        description="Show folder, context and cost of a Codex CLI session.",
     )
     commands = parser.add_subparsers(dest="command", required=True)
     tmux_parser = commands.add_parser("tmux", help="print a tmux segment for the active pane")

@@ -1,18 +1,18 @@
 # codex-status-line
 
-`codex-status-line` shows the model, folder, git branch, context use and cost of an [OpenAI Codex CLI](https://github.com/openai/codex) session. It reads the session log Codex writes to `~/.codex/sessions`. It shows the result in one of two places: a line in the Codex chat after every answer (a Codex hook), or a segment in your tmux status bar. Codex's own status line accepts only built-in items, so a custom script cannot draw there ([openai/codex#17827](https://github.com/openai/codex/issues/17827)).
+`codex-status-line` shows the folder, git branch, context use and cost of an [OpenAI Codex CLI](https://github.com/openai/codex) session. It reads the session log Codex writes to `~/.codex/sessions`. It shows the result in one of two places: a line in the Codex chat after every answer (a Codex hook), or a segment in your tmux status bar. Codex's own status line accepts only built-in items, so a custom script cannot draw there ([openai/codex#17827](https://github.com/openai/codex/issues/17827)).
 
 ```
-gpt-6-luna · ~/project · main · ░░░░░ ctx 4% · session $0.0013 · today $0.0312 · █░░░░ month $3.39/$20.00
+~/project · main · ░░░░░ ctx 4% · session $0.0013
 ```
 
 ## Fields by billing type
 
-The tool detects who bills the session from the session log and your Codex `config.toml`, so you can switch models or providers without changing anything.
+The model name is left out because Codex's own footer already shows it. The tool detects who bills the session from the session log and your Codex `config.toml`, so you can switch models or providers without changing anything.
 
 | Session billed by | Detected when | Billing fields |
 |---|---|---|
-| OpenRouter | the provider's `base_url` contains `openrouter.ai` | `session`: exact cost billed by OpenRouter; `today`; `month` against the key's limit |
+| OpenRouter | the provider's `base_url` contains `openrouter.ai` | `session`: exact cost billed by OpenRouter |
 | ChatGPT plan | the log carries usage-limit windows | each window, for example `5h ██░░░ 40% ↻14:30` and `week █░░░░ 21% ↻Thu 10:00` |
 | OpenAI API key | provider `openai` without limit windows | `session ~$0.0123 est.`: token counts times the model's list price |
 | Anything else, such as Ollama | none of the above | total tokens used |
@@ -60,7 +60,7 @@ The hook adds one line to the chat after every Codex answer, in any terminal. Ad
 }
 ```
 
-Codex asks you to trust a new hook before it runs it; approve it with `/hooks`. The line then appears after each answer as `↳ Hook · gpt-6-luna · ~/project · …`. The hook runs right after the last request, before OpenRouter has billed it, so its session cost usually carries the `~` estimate mark. The tmux bar shows the exact figure a few seconds later.
+Codex asks you to trust a new hook before it runs it; approve it with `/hooks`. The line then appears after each answer as `↳ Hook · ~/project · main · …`. The hook runs right after the last request, before OpenRouter has billed it, so its session cost usually carries the `~` estimate mark. The tmux bar shows the exact figure a few seconds later.
 
 ## tmux bar setup
 
@@ -86,7 +86,6 @@ ruff check . && ruff format --check .
 ## Limitations
 
 - **tmux matching by folder:** a shared background Codex process writes every session's log, so the tmux segment cannot trace a log to a pane directly. It picks the newest log written since the pane's Codex started, preferring one started in the pane's folder. Two Codex sessions in the same folder at the same time can therefore show each other's figures.
-- **Key-wide totals:** OpenRouter's `today` and `month` figures cover every program that uses the same key. Only `session` is specific to the Codex session.
 - **Estimated API-key cost:** for an OpenAI API key, the figure is an estimate. It is shown only for models in OpenRouter's public model list.
 - **Plan detection:** a ChatGPT-plan session is recognised once Codex logs the first usage-limit snapshot, which arrives with the first answer.
 - **Process lookup:** the tmux segment finds Codex with `ps`, which works on Linux and macOS but not on Windows.

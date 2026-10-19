@@ -44,10 +44,6 @@ class FormattingTest(unittest.TestCase):
         self.assertEqual(render.format_tokens(12_345), "12.3k")
         self.assertEqual(render.format_tokens(2_500_000), "2.5M")
 
-    def test_short_model_name_drops_provider_prefix(self):
-        self.assertEqual(render.short_model_name("openai/gpt-6-luna"), "gpt-6-luna")
-        self.assertEqual(render.short_model_name("gpt-6-luna"), "gpt-6-luna")
-
     def test_window_label_names_common_plan_windows(self):
         self.assertEqual(render.window_label(300), "5h")
         self.assertEqual(render.window_label(10080), "week")
@@ -63,14 +59,14 @@ class FormattingTest(unittest.TestCase):
 
 
 class RenderTest(unittest.TestCase):
-    PARTS = [[Piece("gpt-6-luna", "model")], [Piece("░░░░░", "good"), Piece(" ctx 4%")]]
+    PARTS = [[Piece("main", "branch")], [Piece("░░░░░", "good"), Piece(" ctx 4%")]]
 
     def test_plain_has_no_style_codes(self):
-        self.assertEqual(render.render_plain(self.PARTS), "gpt-6-luna · ░░░░░ ctx 4%")
+        self.assertEqual(render.render_plain(self.PARTS), "main · ░░░░░ ctx 4%")
 
     def test_tmux_wraps_styled_pieces(self):
         line = render.render_tmux(self.PARTS)
-        self.assertIn("#[fg=cyan,bold]gpt-6-luna#[default]", line)
+        self.assertIn("#[fg=green]main#[default]", line)
         self.assertIn("#[fg=green]░░░░░#[default] ctx 4%", line)
 
     def test_tmux_escapes_hash_in_text(self):

@@ -11,7 +11,6 @@ class Piece:
 
 
 TMUX_STYLES = {
-    "model": "#[fg=cyan,bold]",
     "branch": "#[fg=green]",
     "cost": "#[fg=magenta]",
     "good": "#[fg=green]",
@@ -53,10 +52,6 @@ def format_tokens(count):
     if count >= THOUSAND:
         return f"{count / THOUSAND:.1f}k"
     return str(count)
-
-
-def short_model_name(model):
-    return model.rsplit("/", 1)[-1]
 
 
 def window_label(window_minutes):

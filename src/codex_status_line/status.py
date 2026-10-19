@@ -7,7 +7,6 @@ from .render import (
     format_tokens,
     level_style,
     meter,
-    short_model_name,
     window_label,
 )
 
@@ -18,9 +17,9 @@ def home_relative(path, home):
     return path
 
 
-def identity_parts(model, cwd, home, branch):
-    model_name = short_model_name(model) if model else "codex"
-    parts = [[Piece(model_name, "model")], [Piece(home_relative(cwd, home))]]
+def identity_parts(cwd, home, branch):
+    # The model name is left out: Codex's own footer already shows it.
+    parts = [[Piece(home_relative(cwd, home))]]
     if branch:
         parts.append([Piece(branch, "branch")])
     return parts
@@ -37,25 +36,13 @@ def context_part(summary):
     return meter_pieces(fraction) + [Piece(f" ctx {fraction:.0%}")]
 
 
-def openrouter_parts(billed_cost, estimated_cost, all_estimated, key_info):
+def openrouter_parts(billed_cost, estimated_cost, all_estimated):
     # OpenRouter bills a request 5 to 10 seconds after it ends. Until then its cost is
     # estimated ("~"); "+" means some requests have no figure at all yet.
     estimate_marker = "~" if estimated_cost else ""
     missing_marker = "" if all_estimated else "+"
-    session_text = f"session {estimate_marker}{format_money(billed_cost + estimated_cost)}"
-    parts = [
-        [Piece(session_text + missing_marker, "cost")],
-        [Piece(f"today {format_money(key_info['usage_daily'])}")],
-    ]
-    limit = key_info.get("limit")
-    spent_this_month = key_info["usage_monthly"]
-    if limit:
-        fraction = spent_this_month / limit
-        month_text = f" month {format_money(spent_this_month)}/{format_money(limit)}"
-        parts.append(meter_pieces(fraction) + [Piece(month_text)])
-    else:
-        parts.append([Piece(f"month {format_money(spent_this_month)}")])
-    return parts
+    total_text = format_money(billed_cost + estimated_cost)
+    return [[Piece(f"session {estimate_marker}{total_text}{missing_marker}", "cost")]]
 
 
 def plan_window_part(window, now):
