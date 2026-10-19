@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "codex-status-line"
+version = "0.1.0"
+description = "Model, context and cost status line for OpenAI Codex CLI, as a Codex hook or a tmux bar"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [{ name = "Riad Mashrub Shourov" }]
+dependencies = []
+keywords = ["codex", "openai", "openrouter", "tmux", "statusline"]
+
+[project.urls]
+Homepage = "https://github.com/shourovrm/codex-status-line"
+
+[project.scripts]
+codex-status-line = "codex_status_line.cli:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "PL"]
+# Tests compare against literal numbers on purpose.
+# The token_count test helper mirrors the many fields of the real log record.
+per-file-ignores = { "tests/*" = ["PLR2004", "PLR0913"] }

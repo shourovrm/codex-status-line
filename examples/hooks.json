@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codex-status-line hook",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
